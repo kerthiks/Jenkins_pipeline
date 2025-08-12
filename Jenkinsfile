@@ -2,52 +2,46 @@ pipeline {
     agent any
 
     environment {
-        BRANCH_NAME = "${env.BRANCH_NAME}"
+        GIT_REPO = 'https://github.com/kerthiks/jenkins_1.git'
+        GIT_CREDENTIALS = credentials('git-credentials-id') // Injects GIT_CREDENTIALS_USR and GIT_CREDENTIALS_PSW
+        TARGET_BRANCH = 'main'
+        GIT_USER_NAME = 'jenkins'
+        GIT_USER_EMAIL = 'jenkins@example.com'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Building project...'
-                // Example: sh 'mvn clean install'
+                echo '✅ Building project...'
+                // sh 'your build command'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                // Example: sh 'mvn test'
+                echo '🧪 Running tests...'
+                // sh 'your test command'
             }
         }
 
-        stage('Merge PR') {
+        stage('Merge PR to Main') {
             when {
-                expression {
-                    return env.CHANGE_ID != null  // Ensures this only runs for Pull Requests
-                }
+                expression { return env.BRANCH_NAME != env.TARGET_BRANCH }
             }
             steps {
                 script {
-                    echo 'Attempting to merge PR...'
-
-                    def gitUser = 'jenkins'
-                    def gitEmail = 'jenkins@example.com'
+                    echo "🔁 Merging branch '${env.BRANCH_NAME}' into '${env.TARGET_BRANCH}'..."
 
                     sh """
-                    git config --global user.name "${gitUser}"
-                    git config --global user.email "${gitEmail}"
+                        git config --global user.name "${GIT_USER_NAME}"
+                        git config --global user.email "${GIT_USER_EMAIL}"
 
-                    git remote set-url origin https://${GIT_CREDENTIALS}@github.com/kerthiks/jenkins_1.git
-                    git fetch origin
-                    git checkout ${env.CHANGE_BRANCH}
-                    git merge origin/main --no-edit
-                    git push origin ${env.CHANGE_BRANCH}
+                        git remote set-url origin https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@github.com/kerthiks/jenkins_1.git
+
+                        git fetch origin
+                        git checkout ${TARGET_BRANCH}
+                        git merge origin/${BRANCH_NAME} --no-edit
+                        git push origin ${TARGET_BRANCH}
                     """
                 }
             }
@@ -56,10 +50,14 @@ pipeline {
 
     post {
         success {
-            echo '✅ Build & PR Merge Successful!'
+            echo '✅ Merge completed successfully.'
         }
         failure {
-            echo '❌ Build or PR Merge Failed.'
+            echo '❌ Merge failed.'
         }
     }
 }
+git checkout main
+git add Jenkinsfile
+git commit -m "Add working Jenkinsfile to main"
+git push origin main
