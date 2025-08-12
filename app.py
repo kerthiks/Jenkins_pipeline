@@ -9,3 +9,9 @@ print("i am from the devops branch 7")
 #dsfasdf
 #ghvg
 #hjhg
+
+def greet_devops():
+    print("Hello, DevOps team! Keep up the great work!")
+
+# Call the function
+greet_devops()
