@@ -30,47 +30,31 @@ pipeline {
         }
 
         stage('Merge to Main') {
-            when {
-                expression {
-                    // This allows merging if source branch is 'devops'
-                    def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                    return branch == 'devops' || env.CHANGE_BRANCH == 'devops'
-                }
-            }
-            steps {
-                echo '🔀 Merging devops into main branch...'
-                sh '''
-                git config user.name "Jenkins"
-                git config user.email "jenkins@example.com"
-
-                # Detect current branch (might be devops or PR)
-                CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-                echo "Current branch is: $CURRENT_BRANCH"
-
-                git fetch origin
-                git checkout main
-                git pull origin main
-
-                # Merge devops branch into main
-                git merge --no-ff origin/devops -m "Auto-merged by Jenkins from devops"
-
-                # Push the merged changes to main
-                git push origin main
-                '''
-            }
+    when {
+        expression {
+            // Match if this is from devops branch or PR from devops
+            return env.BRANCH_NAME == 'devops' || env.CHANGE_BRANCH == 'devops'
         }
     }
+    steps {
+        echo '🔀 Preparing to merge devops into main...'
+        sh '''
+        git config user.name "Jenkins"
+        git config user.email "jenkins@example.com"
 
-    post {
-        always {
-            echo '🧹 Cleaning up...'
-            sh 'pkill -f app.py || true'
-        }
-        success {
-            echo '✅ Pipeline succeeded!'
-        }
-        failure {
-            echo '❌ Pipeline failed.'
-        }
+        echo "🔍 Fetching all remote branches..."
+        git fetch origin +refs/heads/*:refs/remotes/origin/*
+
+        echo "📦 Checking out main branch..."
+        git checkout -B main origin/main
+
+        echo "🔀 Merging devops into main..."
+        git merge --no-ff origin/devops -m "Auto-merged by Jenkins from devops"
+
+        echo "🚀 Pushing merged changes to main..."
+        git push origin main
+        '''
     }
 }
+    }
+}           
