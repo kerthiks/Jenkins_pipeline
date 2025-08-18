@@ -1,0 +1,4 @@
+# requirements.txt
+
+# Add actual dependencies below, for now just an example
+requests
