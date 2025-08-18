@@ -6,6 +6,9 @@ def main():
     print("Running main function...")
     print("Application has completed execution.")
     print("Exiting the application.")
+    print("Goodbye!")
+    print("Thank you for using this app!")
+    print("Have a great day!")
 
 
 if __name__ == "__main__":
