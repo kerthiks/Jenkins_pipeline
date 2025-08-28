@@ -9,6 +9,7 @@ def main():
     print("Goodbye!")
     print("Thank you for using this app!")
     print("Have a great day!")
+    print("See you next time!") #last update
 
 
 if __name__ == "__main__":
