@@ -1,0 +1,41 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  trivy-and-snyk-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # ----------- Trivy Scan -------------
+      - name: Install Trivy
+        run: |
+          sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Trivy FS scan
+        run: trivy fs --exit-code 1 --severity CRITICAL .
+
+      # ----------- Snyk Scan -------------
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Snyk Test (Code Dependencies)
+        run: snyk test --severity-threshold=critical
+
+      # Uncomment this if you’re scanning Docker images:
+      # - name: Snyk Container Test
+      #   run: snyk container test your-image-name --severity-threshold=critical
